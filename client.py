@@ -6,3 +6,9 @@ import json
 import sys
 
 
+if __name__ == '__main__':
+    login_frame()
+    window.setLayout(grid)
+
+    window.show()
+    sys.exit(app.exec())

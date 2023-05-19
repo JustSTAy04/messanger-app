@@ -1,5 +1,5 @@
 import sys
-from PyQt5.QtWidgets import QApplication, QLabel, QPushButton, QVBoxLayout, QWidget, QFileDialog, QGridLayout, QLineEdit
+from PyQt5.QtWidgets import QApplication, QLabel, QPushButton, QWidget, QGridLayout, QLineEdit, QMessageBox
 from PyQt5 import QtGui, QtCore
 from PyQt5.QtGui import QCursor
 
@@ -83,6 +83,7 @@ def login_frame():
     grid.addWidget(widgets['input'][-1], 4, 1)
 
     widgets['button'].append(add_button('Login'))
+    widgets['button'][-1].clicked.connect(login)
     grid.addWidget(widgets['button'][-1], 5, 1)
 
     widgets['label'].append(add_label('Need an account?', size=14, align='c', tmar=10, bmar=0))
@@ -113,6 +114,7 @@ def sign_up_frame():
 
     widgets['button'].append(add_button('Sign Up'))
     grid.addWidget(widgets['button'][-1], 5, 1)
+    widgets['button'][-1].clicked.connect(sign_up)
 
     widgets['label'].append(add_label('Already a user?', size=14, align='c', tmar=10, bmar=0))
     grid.addWidget(widgets['label'][-1], 6, 1)
@@ -120,6 +122,60 @@ def sign_up_frame():
     widgets['button'].append(add_text_button('Login'))
     widgets['button'][-1].clicked.connect(login_frame)
     grid.addWidget(widgets['button'][-1], 7, 1)
+
+
+def error_message(msg):
+    error = QMessageBox()
+    error.setWindowTitle('Ooops!')
+    error.setText(msg)
+    error.setIcon(QMessageBox.Warning)
+    error.setStandardButtons(QMessageBox.Ok)
+    error.setStyleSheet(f'background: {colors["white"]}; color: {colors["dark_gray"]}; font-size: 14px; font-family: Roboto;')
+    error.exec()
+
+
+def return_user_data():
+    return widgets['input'][0].text().strip(), widgets['input'][1].text()
+
+
+def sign_up():
+    username, password = return_user_data()
+    name_msg = username_is_valid(username)
+    pass_msg = password_is_valid(password)
+    if name_msg != 'ok':
+        error_message('Username ' + name_msg)
+    elif pass_msg != 'ok':
+        error_message('Password ' + pass_msg)
+    else:
+        print(username, password)
+
+
+def login():
+    username, password = return_user_data()
+
+
+def username_is_valid(username):
+    if len(username) < 4:
+        return 'is too short (minimum 4 symbols).'
+    elif username[0].isnumeric():
+        return 'can`t start with a number.'
+    else:
+        return 'ok'
+
+
+def password_is_valid(password):
+    if len(password) < 4:
+        return 'is too short (minimum 4 symbols).'
+    elif len([i for i in password if i == ' ']) > 0:
+        return 'can`t contain spaces.'
+    else:
+        return 'ok'
+
+
+def main_frame():
+    clear_widgets()
+    window.setFixedWidth(800)
+    window.setFixedHeight(600)
 
 
 app = QApplication(sys.argv)
@@ -132,9 +188,3 @@ window.setFixedHeight(300)
 window.setStyleSheet(f'background: {colors["white"]}; ')
 
 grid = QGridLayout()
-
-login_frame()
-window.setLayout(grid)
-
-window.show()
-sys.exit(app.exec())
