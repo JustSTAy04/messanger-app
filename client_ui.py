@@ -2,6 +2,7 @@ import sys
 from PyQt5.QtWidgets import QApplication, QLabel, QPushButton, QWidget, QGridLayout, QLineEdit, QMessageBox
 from PyQt5 import QtGui, QtCore
 from PyQt5.QtGui import QCursor
+from client import check_user, check_username, add_user
 
 
 widgets = {
@@ -147,11 +148,19 @@ def sign_up():
     elif pass_msg != 'ok':
         error_message('Password ' + pass_msg)
     else:
-        print(username, password)
+        if check_username(username):
+            add_user(username, password)
+        else:
+            error_message('This username is already taken.')
 
 
 def login():
     username, password = return_user_data()
+    print(username, password)
+    if check_user(username, password):
+        error_message('Incorrect username or password!')
+    else:
+        print('Logged in!')
 
 
 def username_is_valid(username):
@@ -168,6 +177,8 @@ def password_is_valid(password):
         return 'is too short (minimum 4 symbols).'
     elif len([i for i in password if i == ' ']) > 0:
         return 'can`t contain spaces.'
+    elif not(password.isalpha() or password.isalnum()):
+        return 'must contain letters.'
     else:
         return 'ok'
 
