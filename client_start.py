@@ -1,9 +1,6 @@
-from client_ui import *
+from client_ui import start
 
 
+# starts our app if this is the main file
 if __name__ == '__main__':
-    login_frame()
-    window.setLayout(grid)
-
-    window.show()
-    sys.exit(app.exec())
+    start()

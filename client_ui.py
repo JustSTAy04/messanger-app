@@ -5,12 +5,14 @@ from PyQt5.QtGui import QCursor
 from client import check_user, check_username, add_user
 
 
+# stores all widgets that are used in our app
 widgets = {
     'label': [],
     'button': [],
     'input': []
 }
 
+# stores all colors that are used in our app for comfort
 colors = {
     'white': '#FFFFFF',
     'purple': '#9375BF',
@@ -19,6 +21,7 @@ colors = {
 }
 
 
+# deletes all widgets from our app (clears the window to prepare it for displaying new widgets)
 def clear_widgets():
     for widget in widgets:
         if widgets[widget]:
@@ -27,6 +30,7 @@ def clear_widgets():
             widgets[widget].pop()
 
 
+# adds a text (qlabel) to our window with some text and styles
 def add_label(text, boldness=400, size=16, align='l', tmar=0, rmar=0, bmar=0, lmar=0, tpad=0, rpad=0, bpad=0, lpad=0):
     label = QLabel(text)
     if align == 'r':
@@ -37,6 +41,7 @@ def add_label(text, boldness=400, size=16, align='l', tmar=0, rmar=0, bmar=0, lm
     return label
 
 
+# adds a button (qpushbutton) to our window with some text and styles
 def add_button(text):
     button = QPushButton(text)
     button.setCursor(QCursor(QtCore.Qt.PointingHandCursor))
@@ -45,6 +50,7 @@ def add_button(text):
     return button
 
 
+# adds a text button (qpushbutton) to our window with some text and styles
 def add_text_button(text):
     button = QPushButton(text)
     button.setCursor(QCursor(QtCore.Qt.PointingHandCursor))
@@ -54,6 +60,7 @@ def add_text_button(text):
     return button
 
 
+# adds an input line (qlineedit) to our window with some placeholder and styles
 def add_line_edit(text):
     line_edit = QLineEdit()
     line_edit.setMaxLength(12)
@@ -65,6 +72,7 @@ def add_line_edit(text):
     return line_edit
 
 
+# creates a frame for logging in (places necessary widgets on our grid)
 def login_frame():
     clear_widgets()
 
@@ -95,6 +103,7 @@ def login_frame():
     grid.addWidget(widgets['button'][-1], 7, 1)
 
 
+# creates a frame for signing up (places necessary widgets on our grid)
 def sign_up_frame():
     clear_widgets()
 
@@ -125,6 +134,7 @@ def sign_up_frame():
     grid.addWidget(widgets['button'][-1], 7, 1)
 
 
+# creates an error message (qmessagebox) with some text
 def error_message(msg):
     error = QMessageBox()
     error.setWindowTitle('Ooops!')
@@ -135,10 +145,12 @@ def error_message(msg):
     error.exec()
 
 
+# return data that user has entered in the input lines
 def return_user_data():
     return widgets['input'][0].text().strip(), widgets['input'][1].text()
 
 
+# is used for signing up (checks validation, username and adds new user)
 def sign_up():
     username, password = return_user_data()
     name_msg = username_is_valid(username)
@@ -154,6 +166,7 @@ def sign_up():
             error_message('This username is already taken.')
 
 
+# is used for logging in (checks correctness of input data)
 def login():
     username, password = return_user_data()
     print(username, password)
@@ -163,6 +176,7 @@ def login():
         print('Logged in!')
 
 
+# checks if username is valid and returns some text
 def username_is_valid(username):
     if len(username) < 4:
         return 'is too short (minimum 4 symbols).'
@@ -172,6 +186,7 @@ def username_is_valid(username):
         return 'ok'
 
 
+# checks if password is valid and returns some string
 def password_is_valid(password):
     if len(password) < 4:
         return 'is too short (minimum 4 symbols).'
@@ -183,12 +198,23 @@ def password_is_valid(password):
         return 'ok'
 
 
+# creates a main frame which is used for messaging
 def main_frame():
     clear_widgets()
     window.setFixedWidth(800)
     window.setFixedHeight(600)
 
 
+# start the app and is used in another file
+def start():
+    login_frame()
+    window.setLayout(grid)
+
+    window.show()
+    sys.exit(app.exec())
+
+
+# creates app, main window and grid, set some styles for our window
 app = QApplication(sys.argv)
 window = QWidget()
 window.setWindowIcon(QtGui.QIcon('chat.png'))
