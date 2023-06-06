@@ -69,7 +69,7 @@ def add_line_edit(text):
     line_edit.setPlaceholderText(text)
     line_edit.setStyleSheet(
         'font-family: Roboto; font-weight: 400; font-size: 16px; margin: 0px 10px 10px 10px; border-radius: 4px;'
-        + f'color: {colors["dark_gray"]}; box-shadow: 0px 0px 4px {colors["light_gray"]}; border: 2px solid {colors["light_gray"]};')
+        + f'color: {colors["dark_gray"]}; border: 2px solid {colors["light_gray"]};')
     return line_edit
 
 

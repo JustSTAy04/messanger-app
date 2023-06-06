@@ -9,6 +9,7 @@ from client_ui import *
 user = {'username': '', 'password': ''}
 messages = pd.DataFrame({'send': [], 'recv': [], 'message': []})
 online_users = []
+HOST = (socket.gethostname(), 10000)
 
 
 # FUNCTIONS THAT ARE USED FOR DRAWING GUI
@@ -78,13 +79,13 @@ def sign_up_frame():
 
 
 # creates a main frame which is used for messaging
-def main_first_frame(username):
+def main_first_frame():
     clear_widgets()
     window.setFixedWidth(800)
     window.setFixedHeight(600)
     grid.setColumnMinimumWidth(2, 600)
 
-    widgets['label'].append(add_label(username, boldness=600, align='c', tpad=5, bpad=5, size=18, background=colors['purple'], color=colors['white']))
+    widgets['label'].append(add_label(user['username'], boldness=600, align='c', tpad=5, bpad=5, size=18, background=colors['purple'], color=colors['white']))
     grid.addWidget(widgets['label'][-1], 0, 1)
 
     widgets['label'].append(add_label('Online users:', boldness=600, align='c', tpad=5, size=18))
@@ -105,13 +106,9 @@ def main_first_frame(username):
     widgets['button'][-1].clicked.connect(login_frame)
     grid.addWidget(widgets['button'][-1], 3, 1)
 
-
-# start the app and is used in another file
-def start():
-    login_frame()
-    window.setLayout(grid)
-    window.show()
-    sys.exit(app.exec())
+    request_users_db()
+    time.sleep(1)
+    request_msg_db()
 
 
 # MAIN FUNCTIONS THAT SEND AND RECEIVE MESSAGES
@@ -140,10 +137,9 @@ def update_users(data):
 # functions that gets a checked data
 def get_checked_data(data):
     if data['result']:
-        print('Everything is correct.')
+        main_first_frame()
     else:
-        print(data['error'])
-        enter_data()
+        error_message(data['error'])
 
 
 # functions that gest a database
@@ -162,20 +158,23 @@ def get_message(data):
     print(f'Message from {send}: {msg}.')
 
 
-# function for entering data
-def enter_data():
-    status_valid = False
-    status = ''
+# gets user data that was entered
+def get_user_data():
+    user['username'] = widgets['input'][0].text().strip()
+    user['password'] = widgets['input'][1].text()
 
-    while not status_valid:
-        status = input('Login or sign up?').strip().lower()
-        if status == 'login' or status == 'sign up':
-            status_valid = True
 
-    user['username'] = input('Username: ')
-    user['password'] = input('Password: ')
+# first function for entering data
+def login():
+    get_user_data()
+    user_data = {'command': 'check_data', 'status': 'login', 'username': user['username'], 'password': user['password']}
+    deliver_msg(user_data, client)
 
-    user_data = {'command': 'check_data', 'status': status, 'username': user['username'], 'password': user['password']}
+
+# second function for entering data
+def sign_up():
+    get_user_data()
+    user_data = {'command': 'check_data', 'status': 'sign up', 'username': user['username'], 'password': user['password']}
     deliver_msg(user_data, client)
 
 
@@ -226,28 +225,16 @@ def handle_server():
             client.close()
 
 
-start()
-
-HOST = (socket.gethostname(), 10000)
-
 # create a socket and connect to a server
 client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 client.connect(HOST)  # подключаемся с помощью клиентского сокета к серверу
 print('Connected to', HOST)
 
-enter_data()
-
 # start a new thread for receiving data
 t = threading.Thread(target=handle_server)
 t.start()
 
-request_users_db()
-time.sleep(1)
-request_msg_db()
-
-# send a message to a server
-while True:
-    who = input('who? ')
-    msg = input('')
-    data = {'command': 'message', 'send': user['username'], 'recv': who, 'message': msg}
-    deliver_msg(data, client)
+login_frame()
+window.setLayout(grid)
+window.show()
+sys.exit(app.exec())
