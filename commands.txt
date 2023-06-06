@@ -1,0 +1,36 @@
+SERVER COMMANDS (data that sent from server)
+--database-- sends database to a client
+----username: str
+----type (msgs/users): str
+----res: list/dict
+
+--user_update-- tells client about connected/disconnected users
+----username: str
+----status (add/remove): str
+
+--message-- sends a message between two clients
+----send: str
+----recv: str
+----message: str
+
+--checked_data-- tells to a client if its data is correct or not
+----result: bool
+----error: str
+----status (login/sign up): str
+
+CLIENT COMMANDS (data that sent from client)
+--message-- tells server to send message to another client
+----send: str
+----recv: str
+----message: str
+
+--log_out-- tells server about disconnecting
+----username: str
+
+--check_data-- asks server to check entered data
+----username: str
+----password: str
+
+--database-- requests database from server
+----username: str
+----type (msgs/users): str

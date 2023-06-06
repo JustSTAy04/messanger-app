@@ -1,2 +1,4 @@
-,sender,recipient,message
+,send,recv,message
 0,Leon,Kate,Hi
+1,Matt,Leon,oh hi
+2,Leon,Matt,hey
