@@ -122,16 +122,12 @@ def new_user(data, sock):
 
 
 # a function that removes user from online list
-def remove_user(sock):
-    username = ''
-    for u, s in online_users.items():
-        if s == sock:
-            online_users.pop(u)
-            print(f'User {u} disconnected.')
-            username = u
+def remove_user(data):
+    username = data['username']
+    online_users.pop(data['username'])
     new_data = {'command': 'user_update', 'username': username, 'status': 'remove'}
     for u, s in online_users.items():
-        if s != sock:
+        if u != username:
             deliver_msg(s, new_data)
 
 
@@ -196,7 +192,17 @@ def handle_client(sock):
                 print('Unknown command!!!')
 
         except ConnectionResetError:
-            remove_user(sock)
+            username = ''
+            for u, s in online_users.items():
+                if s == sock:
+                    online_users.pop(u)
+                    print(f'User {u} disconnected.')
+                    username = u
+                    break
+            new_data = {'command': 'user_update', 'username': username, 'status': 'remove'}
+            for u, s in online_users.items():
+                if s != sock:
+                    deliver_msg(s, new_data)
             break
 
     sock.close()
