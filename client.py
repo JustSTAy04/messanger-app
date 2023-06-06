@@ -3,11 +3,115 @@ import threading
 import json
 import time
 import pandas as pd
+from client_ui import *
 
 
 user = {'username': '', 'password': ''}
 messages = pd.DataFrame({'send': [], 'recv': [], 'message': []})
 online_users = []
+
+
+# FUNCTIONS THAT ARE USED FOR DRAWING GUI
+# creates a frame for logging in (places necessary widgets on our grid)
+def login_frame():
+    clear_widgets()
+    window.setFixedWidth(400)
+    window.setFixedHeight(300)
+    grid.setColumnMinimumWidth(2, 0)
+
+    widgets['label'].append(add_label('Hello there!', boldness=500, size=18, align='c', tmar=17))
+    grid.addWidget(widgets['label'][-1], 0, 1)
+
+    widgets['label'].append(add_label('Username:', lmar=10, rmar=10))
+    grid.addWidget(widgets['label'][-1], 1, 1)
+
+    widgets['input'].append(add_line_edit('Enter your username'))
+    grid.addWidget(widgets['input'][-1], 2, 1)
+
+    widgets['label'].append(add_label('Password:', lmar=10, rmar=10))
+    grid.addWidget(widgets['label'][-1], 3, 1)
+
+    widgets['input'].append(add_line_edit('Enter your password'))
+    grid.addWidget(widgets['input'][-1], 4, 1)
+
+    widgets['button'].append(add_button('Login'))
+    widgets['button'][-1].clicked.connect(login)
+    grid.addWidget(widgets['button'][-1], 5, 1)
+
+    widgets['label'].append(add_label('Need an account?', size=14, align='c', tmar=10, bmar=0))
+    grid.addWidget(widgets['label'][-1], 6, 1)
+
+    widgets['button'].append(add_text_button('Sign up'))
+    widgets['button'][-1].clicked.connect(sign_up_frame)
+    grid.addWidget(widgets['button'][-1], 7, 1)
+
+
+# creates a frame for signing up (places necessary widgets on our grid)
+def sign_up_frame():
+    clear_widgets()
+
+    widgets['label'].append(add_label('Welcome!', boldness=500, size=18, align='c', tmar=17))
+    grid.addWidget(widgets['label'][-1], 0, 1)
+
+    widgets['label'].append(add_label('Username:', lmar=10, rmar=10))
+    grid.addWidget(widgets['label'][-1], 1, 1)
+
+    widgets['input'].append(add_line_edit('Enter your username'))
+    grid.addWidget(widgets['input'][-1], 2, 1)
+
+    widgets['label'].append(add_label('Password:', lmar=10, rmar=10))
+    grid.addWidget(widgets['label'][-1], 3, 1)
+
+    widgets['input'].append(add_line_edit('Enter your password'))
+    grid.addWidget(widgets['input'][-1], 4, 1)
+
+    widgets['button'].append(add_button('Sign Up'))
+    grid.addWidget(widgets['button'][-1], 5, 1)
+    widgets['button'][-1].clicked.connect(sign_up)
+
+    widgets['label'].append(add_label('Already a user?', size=14, align='c', tmar=10, bmar=0))
+    grid.addWidget(widgets['label'][-1], 6, 1)
+
+    widgets['button'].append(add_text_button('Login'))
+    widgets['button'][-1].clicked.connect(login_frame)
+    grid.addWidget(widgets['button'][-1], 7, 1)
+
+
+# creates a main frame which is used for messaging
+def main_first_frame(username):
+    clear_widgets()
+    window.setFixedWidth(800)
+    window.setFixedHeight(600)
+    grid.setColumnMinimumWidth(2, 600)
+
+    widgets['label'].append(add_label(username, boldness=600, align='c', tpad=5, bpad=5, size=18, background=colors['purple'], color=colors['white']))
+    grid.addWidget(widgets['label'][-1], 0, 1)
+
+    widgets['label'].append(add_label('Online users:', boldness=600, align='c', tpad=5, size=18))
+    grid.addWidget(widgets['label'][-1], 1, 1)
+
+    widgets['list'].append(add_list_widget())
+    grid.addWidget(widgets['list'][-1], 2, 1)
+
+    #widgets['list'][-1].addItem(QListWidgetItem('Kate'))
+
+    # widgets['list'].append(add_list_widget('light_gray'))
+    # grid.addWidget(widgets['list'][-1], 0, 2, 4, 1)
+
+    widgets['label'].append(add_label('Select a chat to start messaging', align='c', tpad=5, bpad=5, size=16, background=colors['purple'], color=colors['white']))
+    grid.addWidget(widgets['label'][-1], 0, 2, 4, 1)
+
+    widgets['button'].append(add_exit_button('Log out'))
+    widgets['button'][-1].clicked.connect(login_frame)
+    grid.addWidget(widgets['button'][-1], 3, 1)
+
+
+# start the app and is used in another file
+def start():
+    login_frame()
+    window.setLayout(grid)
+    window.show()
+    sys.exit(app.exec())
 
 
 # MAIN FUNCTIONS THAT SEND AND RECEIVE MESSAGES
@@ -22,7 +126,7 @@ def recv_msg(soc):
     return json.loads(data.decode())
 
 
-# FUNCTIONS THAT RESPONSIBLE FOR COMMANDS
+# FUNCTIONS THAT ARE RESPONSIBLE FOR COMMANDS
 # functions that updates online users
 def update_users(data):
     if data['status'] == 'add':
@@ -119,13 +223,10 @@ def handle_server():
 
         except ConnectionResetError:
             print('Server is off.')
-            close_socket()
+            client.close()
 
 
-# closes our socket
-def close_socket():
-    client.close()
-
+start()
 
 HOST = (socket.gethostname(), 10000)
 

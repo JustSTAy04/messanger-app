@@ -101,7 +101,7 @@ def recv_msg(sock):
     return json.loads(data.decode())
 
 
-# FUNCTIONS THAT RESPONSIBLE FOR COMMANDS
+# FUNCTIONS THAT ARE RESPONSIBLE FOR COMMANDS
 # a function that sends databases to our client
 def send_database(data, sock):
     if data['type'] == 'users':
