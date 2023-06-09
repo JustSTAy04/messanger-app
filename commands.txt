@@ -1,8 +1,7 @@
 SERVER COMMANDS (data that sent from server)
 --database-- sends database to a client
-----username: str
-----type (msgs/users): str
-----res: list/dict
+----msgs: dict
+----users: list
 
 --user_update-- tells client about connected/disconnected users
 ----username: str
@@ -30,7 +29,3 @@ CLIENT COMMANDS (data that sent from client)
 --check_data-- asks server to check entered data
 ----username: str
 ----password: str
-
---database-- requests database from server
-----username: str
-----type (msgs/users): str

@@ -11,7 +11,6 @@ messages = pd.DataFrame({'send': [], 'recv': [], 'message': []})
 online_users = []
 HOST = (socket.gethostname(), 10000)
 
-
 # FUNCTIONS THAT ARE USED FOR DRAWING GUI
 # creates a frame for logging in (places necessary widgets on our grid)
 def login_frame():
@@ -80,10 +79,14 @@ def sign_up_frame():
 
 # creates a main frame which is used for messaging
 def main_first_frame():
+    print('main frame preparing... (size)')
     clear_widgets()
-    window.setFixedWidth(800)
-    window.setFixedHeight(600)
+    print('cleared widgets...')
+    window.setFixedSize(800, 600)
+    print('resized')
     grid.setColumnMinimumWidth(2, 600)
+
+    print('main frame preparing... (objects)')
 
     widgets['label'].append(add_label(user['username'], boldness=600, align='c', tpad=5, bpad=5, size=18, background=colors['purple'], color=colors['white']))
     grid.addWidget(widgets['label'][-1], 0, 1)
@@ -106,9 +109,7 @@ def main_first_frame():
     widgets['button'][-1].clicked.connect(login_frame)
     grid.addWidget(widgets['button'][-1], 3, 1)
 
-    request_users_db()
-    time.sleep(1)
-    request_msg_db()
+    print('Done!')
 
 
 # MAIN FUNCTIONS THAT SEND AND RECEIVE MESSAGES
@@ -137,18 +138,18 @@ def update_users(data):
 # functions that gets a checked data
 def get_checked_data(data):
     if data['result']:
+        time.sleep(2)
         main_first_frame()
     else:
         error_message(data['error'])
 
 
-# functions that gest a database
+# functions that gets databases
 def get_database(data):
-    d_type = data['type']
-    if d_type == 'msgs':
-        get_db_msg(data['res'])
-    elif d_type == 'users':
-        get_db_users(data['res'])
+    messages = pd.DataFrame(data)
+    print('All messages:\n', messages)
+    online_users = data[:]
+    print('Online: ', online_users)
 
 
 # functions that gets a message and adds it to database
@@ -178,36 +179,12 @@ def sign_up():
     deliver_msg(user_data, client)
 
 
-# FUNCTIONS THAT HELP GET A DATABASE
-# functions that gets a database with messages
-def get_db_msg(data):
-    messages = pd.DataFrame(data)
-    print('All messages:\n', messages)
-
-
-# functions that gets a database with users
-def get_db_users(data):
-    online_users = data[:]
-    print('Online: ', online_users)
-
-
-# FUNCTIONS THAT HELP REQUEST A DATABASE
-# functions that request a database with messages
-def request_msg_db():
-    req_data = {'command': 'database', 'username': user['username'], 'type': 'msgs'}
-    deliver_msg(req_data, client)
-
-
-# functions that request a database with users
-def request_users_db():
-    req_data = {'command': 'database', 'username': user['username'], 'type': 'users'}
-    deliver_msg(req_data, client)
-
-
 def handle_server():
     while True:
         try:
             data = recv_msg(client)
+
+            print(data)
 
             if data['command'] == 'checked_data':
                 get_checked_data(data)
@@ -220,9 +197,10 @@ def handle_server():
             else:
                 print('Unknown command!!!')
 
-        except ConnectionResetError:
-            print('Server is off.')
-            client.close()
+        except socket.error:
+            print('There is no data to receive')
+
+        time.sleep(1)
 
 
 # create a socket and connect to a server
@@ -231,7 +209,7 @@ client.connect(HOST)  # подключаемся с помощью клиент�
 print('Connected to', HOST)
 
 # start a new thread for receiving data
-t = threading.Thread(target=handle_server)
+t = threading.Thread(target=handle_server, daemon=True)
 t.start()
 
 login_frame()

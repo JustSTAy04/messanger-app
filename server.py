@@ -1,6 +1,8 @@
 import socket
 import threading
 import json
+import time
+
 import pandas as pd
 
 
@@ -104,11 +106,8 @@ def recv_msg(sock):
 # FUNCTIONS THAT ARE RESPONSIBLE FOR COMMANDS
 # a function that sends databases to our client
 def send_database(data, sock):
-    if data['type'] == 'users':
-        data['res'] = prepare_users(data['username'])
-    elif data['type'] == 'msgs':
-        data['res'] = prepare_msgs(data['username'])
-    deliver_msg(sock, data)
+    new_data = {'users': prepare_users(data['username']), 'msgs': prepare_msgs(data['username'])}
+    deliver_msg(sock, new_data)
 
 
 # a function that adds new user to online list and (maybe) database
@@ -140,7 +139,10 @@ def check_data(data, sock):
     elif status == 'login':
         if login_is_correct(username, password):
             send_checked_data(new_data, sock, result=True)
+            time.sleep(1)
+            send_database(data, sock)
             print(f'{username} has connected.')
+            time.sleep(1)
             new_user(data, sock)
         else:
             send_checked_data(new_data, sock, error='Incorrect username or password!')
@@ -151,6 +153,9 @@ def check_data(data, sock):
             if res2 == 'ok':
                 if username_is_free(username):
                     send_checked_data(new_data, sock, result=True)
+                    time.sleep(1)
+                    send_database(data, sock)
+                    time.sleep(1)
                     add_user(username, password)
                     print(f'{username} has connected.')
                     new_user(data, sock)
@@ -186,8 +191,6 @@ def handle_client(sock):
                 remove_user(data)
             elif data['command'] == 'check_data':
                 check_data(data, sock)
-            elif data['command'] == 'database':
-                send_database(data, sock)
             else:
                 print('Unknown command!!!')
 

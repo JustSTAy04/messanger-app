@@ -111,8 +111,7 @@ window = QWidget()
 window.setWindowIcon(QtGui.QIcon('chat.png'))
 
 window.setWindowTitle('Chatium')
-window.setFixedWidth(400)
-window.setFixedHeight(300)
+window.setFixedSize(400, 300)
 window.setStyleSheet(f'background: {colors["white"]}')
 
 grid = QGridLayout()
