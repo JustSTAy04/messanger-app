@@ -21,13 +21,12 @@ class Client(QWidget):
         message = self.client_socket.readAll().data().decode()
         print(f'Message from server: {message}')
 
-    def send_message(self):
-        # send message to server
-        message = self.line_edit.text()
-        self.client_socket.write(message.encode())
-        self.client_socket.flush()
+        self.send_message()
 
-        # self.line_edit.clear()
+    def send_message(self, data):
+        # send message to server
+        self.client_socket.write(data.encode())
+        self.client_socket.flush()
 
 
 app = QApplication(sys.argv)
