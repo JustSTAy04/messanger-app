@@ -103,15 +103,3 @@ def error_message(msg):
 # return data that user has entered to the input lines
 def return_user_data():
     return widgets['input'][0].text().strip(), widgets['input'][1].text()
-
-
-# creates app, main window and grid, set some styles for our window
-app = QApplication(sys.argv)
-window = QWidget()
-window.setWindowIcon(QtGui.QIcon('chat.png'))
-
-window.setWindowTitle('Chatium')
-window.setFixedSize(400, 300)
-window.setStyleSheet(f'background: {colors["white"]}')
-
-grid = QGridLayout()

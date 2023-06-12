@@ -3,7 +3,7 @@ import threading
 import json
 import time
 import pandas as pd
-from client_ui import *
+from ui import *
 
 
 user = {'username': '', 'password': ''}

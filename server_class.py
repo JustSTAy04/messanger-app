@@ -21,15 +21,20 @@ class Server(QWidget):
         self.server.listen(QHostAddress.LocalHost, 10000)
         self.server.newConnection.connect(self.handle_connection)
 
-        print('Server started!')
+        print('Server is up and waiting for clients...')
 
     # handling connections (clients)
     def handle_connection(self):
         client = self.server.nextPendingConnection()
         client.readyRead.connect(self.receive_message)
-        # client.readyRead.disconnect(self.disconnected)
+        # client.disconnected.connect(self.handle_disconnected)
         print('new user: ', client.peerAddress())
         self.send_message(client, 'hi')
+
+    # # handling disconnecting
+    # def handle_disconnected(self):
+    #     client = self.sender()
+    #     print(client.peerAddress(), 'disconnected')
 
     # receiving message from client
     def receive_message(self):
@@ -179,9 +184,3 @@ class Server(QWidget):
                 res['recv'].append(r['recv'])
                 res['message'].append(r['message'])
         return res
-
-
-app = QApplication(sys.argv)
-server = Server()
-server.show()
-sys.exit(app.exec())
