@@ -1,16 +1,7 @@
-import sys
 from PyQt5.QtWidgets import QApplication, QLabel, QPushButton, QWidget, QGridLayout, QLineEdit, QMessageBox, QListWidget, QListWidgetItem
 from PyQt5 import QtGui, QtCore
 from PyQt5.QtGui import QCursor
 
-
-# stores all widgets that are used in our app
-widgets = {
-    'label': [],
-    'button': [],
-    'input': [],
-    'list': []
-}
 
 # stores all colors that are used in our app for comfort
 colors = {
@@ -19,16 +10,6 @@ colors = {
     'light_gray': '#F3F3F3',
     'dark_gray': '#303030'
 }
-
-
-# deletes all widgets from our app (clears the window to prepare it for displaying new widgets)
-def clear_widgets():
-    for widget in widgets:
-        if widgets[widget]:
-            for i in range(len(widgets[widget])):
-                widgets[widget][i].hide()
-        for i in range(len(widgets[widget])):
-            widgets[widget].pop()
 
 
 # adds a text (qlabel) to our window with some text and styles
@@ -73,7 +54,7 @@ def add_line_edit(text):
     return line_edit
 
 
-# adds an list widget (qlistwidget) to our window
+# adds a list widget (qlistwidget) to our window
 def add_list_widget(color='white'):
     list_widget = QListWidget()
     list_widget.setStyleSheet('border: none;' + f'background: {colors[color]};')
@@ -98,8 +79,3 @@ def error_message(msg):
     error.setStandardButtons(QMessageBox.Ok)
     error.setStyleSheet(f'background: {colors["white"]}; color: {colors["dark_gray"]}; font-size: 14px; font-family: Roboto;')
     error.exec()
-
-
-# return data that user has entered to the input lines
-def return_user_data():
-    return widgets['input'][0].text().strip(), widgets['input'][1].text()

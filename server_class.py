@@ -29,7 +29,6 @@ class Server(QWidget):
         client.readyRead.connect(self.receive_message)
         # client.disconnected.connect(self.handle_disconnected)
         print('new user: ', client.peerAddress())
-        self.send_message(client, 'hi')
 
     # # handling disconnecting
     # def handle_disconnected(self):

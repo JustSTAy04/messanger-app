@@ -1,6 +1,7 @@
 import sys
 import json
 import pandas as pd
+import time
 from PyQt5.QtWidgets import QApplication, QWidget
 from PyQt5.QtNetwork import QTcpSocket, QHostAddress
 from ui import *
@@ -16,11 +17,29 @@ class Client(QWidget):
         self.client.connected.connect(self.on_connected)
         self.client.readyRead.connect(self.receive_message)
 
-        self.user = {'username': '', 'password': ''}
+        self.user = {
+            'username': '',
+            'password': ''
+        }
+
         self.messages = pd.DataFrame({'send': [], 'recv': [], 'message': []})
         self.online_users = []
 
+        # stores all widgets that are used in our app
+        self.widgets = {
+            'label': [],
+            'button': [],
+            'input': [],
+            'list': []
+        }
+
+        # some gui functions
+        self.setWindowIcon(QtGui.QIcon('chat.png'))
+        self.setWindowTitle('Chatium')
+        self.setFixedSize(400, 300)
+        self.setStyleSheet(f'background: {colors["white"]}')
         self.grid = QGridLayout()
+        self.setLayout(self.grid)
         self.login_frame()
 
     def on_connected(self):
@@ -28,14 +47,14 @@ class Client(QWidget):
 
     # receiving message from server
     def receive_message(self):
-        data = client.readAll().data()
+        data = self.client.readAll().data()
         data = json.loads(data.decode())
-        self.determine_message(client, data)
+        self.determine_message(data)
 
     # send message to server
     def send_message(self, data):
-        client.write(json.dumps(data).encode())
-        client.flush()
+        self.client.write(json.dumps(data).encode())
+        self.client.flush()
 
     def determine_message(self, data):
         if data['command'] == 'checked_data':
@@ -80,120 +99,116 @@ class Client(QWidget):
     # FUNCTIONS THAT ARE RESPONSIBLE FOR LOGGING IN AND SIGNING UP
     # gets user data that was entered
     def get_user_data(self):
-        self.user['username'] = widgets['input'][0].text().strip()
-        self.user['password'] = widgets['input'][1].text()
+        self.user['username'] = self.widgets['input'][0].text().strip()
+        self.user['password'] = self.widgets['input'][1].text()
 
     # first function for entering data
     def login(self):
         self.get_user_data()
         user_data = {'command': 'check_data', 'status': 'login', 'username': self.user['username'], 'password': self.user['password']}
-        self.deliver_msg(user_data, client)
+        self.send_message(user_data)
 
     # second function for entering data
     def sign_up(self):
         self.get_user_data()
         user_data = {'command': 'check_data', 'status': 'sign up', 'username': self.user['username'], 'password': self.user['password']}
-        self.deliver_msg(user_data, client)
+        self.send_message(user_data)
 
     # FUNCTIONS THAT ARE RESPONSIBLE FOR GUI
+    # deletes all widgets from our app (clears the window to prepare it for displaying new widgets)
+    def clear_widgets(self):
+        for widget in self.widgets:
+            if self.widgets[widget]:
+                for i in range(len(self.widgets[widget])):
+                    self.widgets[widget][i].hide()
+            for i in range(len(self.widgets[widget])):
+                self.widgets[widget].pop()
+
     # creates a frame for logging in (places necessary widgets on our grid)
     def login_frame(self):
-        clear_widgets()
+        self.clear_widgets()
         self.setFixedSize(400, 300)
         self.grid.setColumnMinimumWidth(2, 0)
 
-        widgets['label'].append(add_label('Hello there!', boldness=500, size=18, align='c', tmar=17))
-        self.grid.addWidget(widgets['label'][-1], 0, 1)
+        self.widgets['label'].append(add_label('Hello there!', boldness=500, size=18, align='c', tmar=17))
+        self.grid.addWidget(self.widgets['label'][-1], 0, 1)
 
-        widgets['label'].append(add_label('Username:', lmar=10, rmar=10))
-        self.grid.addWidget(widgets['label'][-1], 1, 1)
+        self.widgets['label'].append(add_label('Username:', lmar=10, rmar=10))
+        self.grid.addWidget(self.widgets['label'][-1], 1, 1)
 
-        widgets['input'].append(add_line_edit('Enter your username'))
-        self.grid.addWidget(widgets['input'][-1], 2, 1)
+        self.widgets['input'].append(add_line_edit('Enter your username'))
+        self.grid.addWidget(self.widgets['input'][-1], 2, 1)
 
-        widgets['label'].append(add_label('Password:', lmar=10, rmar=10))
-        self.grid.addWidget(widgets['label'][-1], 3, 1)
+        self.widgets['label'].append(add_label('Password:', lmar=10, rmar=10))
+        self.grid.addWidget(self.widgets['label'][-1], 3, 1)
 
-        widgets['input'].append(add_line_edit('Enter your password'))
-        self.grid.addWidget(widgets['input'][-1], 4, 1)
+        self.widgets['input'].append(add_line_edit('Enter your password'))
+        self.grid.addWidget(self.widgets['input'][-1], 4, 1)
 
-        widgets['button'].append(add_button('Login'))
-        widgets['button'][-1].clicked.connect(self.login)
-        self.grid.addWidget(widgets['button'][-1], 5, 1)
+        self.widgets['button'].append(add_button('Login'))
+        self.widgets['button'][-1].clicked.connect(self.login)
+        self.grid.addWidget(self.widgets['button'][-1], 5, 1)
 
-        widgets['label'].append(add_label('Need an account?', size=14, align='c', tmar=10, bmar=0))
-        self.grid.addWidget(widgets['label'][-1], 6, 1)
+        self.widgets['label'].append(add_label('Need an account?', size=14, align='c', tmar=10, bmar=0))
+        self.grid.addWidget(self.widgets['label'][-1], 6, 1)
 
-        widgets['button'].append(add_text_button('Sign up'))
-        widgets['button'][-1].clicked.connect(self.sign_up_frame)
-        self.grid.addWidget(widgets['button'][-1], 7, 1)
+        self.widgets['button'].append(add_text_button('Sign up'))
+        self.widgets['button'][-1].clicked.connect(self.sign_up_frame)
+        self.grid.addWidget(self.widgets['button'][-1], 7, 1)
 
     # creates a frame for signing up (places necessary widgets on our grid)
     def sign_up_frame(self):
-        clear_widgets()
+        self.clear_widgets()
 
-        widgets['label'].append(add_label('Welcome!', boldness=500, size=18, align='c', tmar=17))
-        self.grid.addWidget(widgets['label'][-1], 0, 1)
+        self.widgets['label'].append(add_label('Welcome!', boldness=500, size=18, align='c', tmar=17))
+        self.grid.addWidget(self.widgets['label'][-1], 0, 1)
 
-        widgets['label'].append(add_label('Username:', lmar=10, rmar=10))
-        self.grid.addWidget(widgets['label'][-1], 1, 1)
+        self.widgets['label'].append(add_label('Username:', lmar=10, rmar=10))
+        self.grid.addWidget(self.widgets['label'][-1], 1, 1)
 
-        widgets['input'].append(add_line_edit('Enter your username'))
-        self.grid.addWidget(widgets['input'][-1], 2, 1)
+        self.widgets['input'].append(add_line_edit('Enter your username'))
+        self.grid.addWidget(self.widgets['input'][-1], 2, 1)
 
-        widgets['label'].append(add_label('Password:', lmar=10, rmar=10))
-        self.grid.addWidget(widgets['label'][-1], 3, 1)
+        self.widgets['label'].append(add_label('Password:', lmar=10, rmar=10))
+        self.grid.addWidget(self.widgets['label'][-1], 3, 1)
 
-        widgets['input'].append(add_line_edit('Enter your password'))
-        self.grid.addWidget(widgets['input'][-1], 4, 1)
+        self.widgets['input'].append(add_line_edit('Enter your password'))
+        self.grid.addWidget(self.widgets['input'][-1], 4, 1)
 
-        widgets['button'].append(add_button('Sign Up'))
-        self.grid.addWidget(widgets['button'][-1], 5, 1)
-        widgets['button'][-1].clicked.connect(self.sign_up)
+        self.widgets['button'].append(add_button('Sign Up'))
+        self.grid.addWidget(self.widgets['button'][-1], 5, 1)
+        self.widgets['button'][-1].clicked.connect(self.sign_up)
 
-        widgets['label'].append(add_label('Already a user?', size=14, align='c', tmar=10, bmar=0))
-        self.grid.addWidget(widgets['label'][-1], 6, 1)
+        self.widgets['label'].append(add_label('Already a user?', size=14, align='c', tmar=10, bmar=0))
+        self.grid.addWidget(self.widgets['label'][-1], 6, 1)
 
-        widgets['button'].append(add_text_button('Login'))
-        widgets['button'][-1].clicked.connect(self.login_frame)
-        self.grid.addWidget(widgets['button'][-1], 7, 1)
-
+        self.widgets['button'].append(add_text_button('Login'))
+        self.widgets['button'][-1].clicked.connect(self.login_frame)
+        self.grid.addWidget(self.widgets['button'][-1], 7, 1)
 
     # creates a main frame which is used for messaging
     def main_first_frame(self):
-        clear_widgets()
+        self.clear_widgets()
         self.setFixedSize(800, 600)
         self.grid.setColumnMinimumWidth(2, 600)
 
-        widgets['label'].append(add_label(self.user['username'], boldness=600, align='c', tpad=5, bpad=5, size=18, background=colors['purple'], color=colors['white']))
-        self.grid.addWidget(widgets['label'][-1], 0, 1)
+        self.widgets['label'].append(add_label(self.user['username'], boldness=600, align='c', tpad=5, bpad=5, size=18, background=colors['purple'], color=colors['white']))
+        self.grid.addWidget(self.widgets['label'][-1], 0, 1)
 
-        widgets['label'].append(add_label('Online users:', boldness=600, align='c', tpad=5, size=18))
-        self.grid.addWidget(widgets['label'][-1], 1, 1)
+        self.widgets['label'].append(add_label('Online users:', boldness=600, align='c', tpad=5, size=18))
+        self.grid.addWidget(self.widgets['label'][-1], 1, 1)
 
-        widgets['list'].append(add_list_widget())
-        self.grid.addWidget(widgets['list'][-1], 2, 1)
+        self.widgets['list'].append(add_list_widget())
+        self.grid.addWidget(self.widgets['list'][-1], 2, 1)
 
         #widgets['list'][-1].addItem(QListWidgetItem('Kate'))
 
         # widgets['list'].append(add_list_widget('light_gray'))
         # grid.addWidget(widgets['list'][-1], 0, 2, 4, 1)
 
-        widgets['label'].append(add_label('Select a chat to start messaging', align='c', tpad=5, bpad=5, size=16, background=colors['purple'], color=colors['white']))
-        self.grid.addWidget(widgets['label'][-1], 0, 2, 4, 1)
+        self.widgets['label'].append(add_label('Select a chat to start messaging', align='c', tpad=5, bpad=5, size=16, background=colors['purple'], color=colors['white']))
+        self.grid.addWidget(self.widgets['label'][-1], 0, 2, 4, 1)
 
-        widgets['button'].append(add_exit_button('Log out'))
-        widgets['button'][-1].clicked.connect(self.login_frame)
-        self.grid.addWidget(widgets['button'][-1], 3, 1)
-
-
-app = QApplication(sys.argv)
-client = Client()
-client.setWindowIcon(QtGui.QIcon('chat.png'))
-client.setWindowTitle('Chatium')
-client.setFixedSize(400, 300)
-client.setStyleSheet(f'background: {colors["white"]}')
-# client.login_frame()
-client.client.connectToHost(QHostAddress.LocalHost, 10000)
-client.show()
-sys.exit(app.exec())
+        self.widgets['button'].append(add_exit_button('Log out'))
+        self.widgets['button'][-1].clicked.connect(self.login_frame)
+        self.grid.addWidget(self.widgets['button'][-1], 3, 1)
