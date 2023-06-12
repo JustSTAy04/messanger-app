@@ -27,13 +27,22 @@ class Server(QWidget):
     def handle_connection(self):
         client = self.server.nextPendingConnection()
         client.readyRead.connect(self.receive_message)
-        # client.disconnected.connect(self.handle_disconnected)
-        print('new user: ', client.peerAddress())
+        client.disconnected.connect(self.handle_disconnected)
 
-    # # handling disconnecting
-    # def handle_disconnected(self):
-    #     client = self.sender()
-    #     print(client.peerAddress(), 'disconnected')
+    # handling disconnecting
+    def handle_disconnected(self):
+        client = self.sender()
+        username = ''
+        for u, s in self.online_users.items():
+            if s == client:
+                username = u
+                break
+        self.online_users.pop(username)
+        print(f'{username} disconnected.')
+        new_data = {'command': 'user_update', 'username': username, 'status': 'remove'}
+        for u, s in self.online_users.items():
+            if u != username:
+                self.send_message(s, new_data)
 
     # receiving message from client
     def receive_message(self):
@@ -59,7 +68,7 @@ class Server(QWidget):
     # FUNCTIONS THAT ARE RESPONSIBLE FOR COMMANDS
     # a function that sends databases to our client
     def send_database(self, client, data):
-        new_data = {'users': self.prepare_users(data['username']), 'msgs': self.prepare_msgs(data['username'])}
+        new_data = {'command': 'database', 'users': self.prepare_users(data['username']), 'msgs': self.prepare_msgs(data['username'])}
         self.send_message(client, new_data)
 
     # a function that removes user from online list

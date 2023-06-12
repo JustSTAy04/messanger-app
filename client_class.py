@@ -79,16 +79,18 @@ class Client(QWidget):
     # functions that gets a checked data
     def get_checked_data(self, data):
         if data['result']:
+            print('data is checked, preparing main frame')
             self.main_first_frame()
         else:
             error_message(data['error'])
 
     # functions that gets databases
     def get_database(self, data):
-        messages = pd.DataFrame(data)
-        print('All messages:\n', messages)
-        online_users = data[:]
-        print('Online: ', online_users)
+        print(data)
+        self.messages = pd.DataFrame(data['msgs'])
+        print('All messages:\n', self.messages)
+        self.online_users = data['users'][:]
+        print('Online: ', self.online_users)
 
     # functions that gets a message and adds it to database
     def get_message(self, data):
@@ -189,8 +191,9 @@ class Client(QWidget):
     # creates a main frame which is used for messaging
     def main_first_frame(self):
         self.clear_widgets()
+        print('widgets cleared')
         self.setFixedSize(800, 600)
-        self.grid.setColumnMinimumWidth(2, 600)
+        print('resize')
 
         self.widgets['label'].append(add_label(self.user['username'], boldness=600, align='c', tpad=5, bpad=5, size=18, background=colors['purple'], color=colors['white']))
         self.grid.addWidget(self.widgets['label'][-1], 0, 1)
@@ -212,3 +215,6 @@ class Client(QWidget):
         self.widgets['button'].append(add_exit_button('Log out'))
         self.widgets['button'][-1].clicked.connect(self.login_frame)
         self.grid.addWidget(self.widgets['button'][-1], 3, 1)
+
+        self.grid.setColumnMinimumWidth(2, 600)
+        print('col width')
