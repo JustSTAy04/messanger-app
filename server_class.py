@@ -1,6 +1,7 @@
 import sys
 import json
 import pandas as pd
+from PyQt5 import QtGui
 from PyQt5.QtWidgets import QApplication, QWidget
 from PyQt5.QtNetwork import QTcpServer, QHostAddress
 
@@ -21,6 +22,9 @@ class Server(QWidget):
         self.server.listen(QHostAddress.LocalHost, 10000)
         self.server.newConnection.connect(self.handle_connection)
 
+        self.setWindowIcon(QtGui.QIcon('chat.png'))
+        self.setWindowTitle('Chatium server')
+
         print('Server is up and waiting for clients...')
 
     # handling connections (clients)
@@ -36,13 +40,13 @@ class Server(QWidget):
         for u, s in self.online_users.items():
             if s == client:
                 username = u
+                self.online_users.pop(username)
+                print(f'{username} disconnected.')
+                new_data = {'command': 'user_update', 'username': username, 'status': 'remove'}
+                for u2, s2 in self.online_users.items():
+                    if u2 != username:
+                        self.send_message(s2, new_data)
                 break
-        self.online_users.pop(username)
-        print(f'{username} disconnected.')
-        new_data = {'command': 'user_update', 'username': username, 'status': 'remove'}
-        for u, s in self.online_users.items():
-            if u != username:
-                self.send_message(s, new_data)
 
     # receiving message from client
     def receive_message(self):
@@ -74,6 +78,7 @@ class Server(QWidget):
     # a function that removes user from online list
     def remove_user(self, data):
         username = data['username']
+        print(f'{username} disconnected.')
         self.online_users.pop(data['username'])
         new_data = {'command': 'user_update', 'username': username, 'status': 'remove'}
         for u, s in self.online_users.items():

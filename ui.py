@@ -1,5 +1,5 @@
-from PyQt5.QtWidgets import QApplication, QLabel, QPushButton, QWidget, QGridLayout, QLineEdit, QMessageBox, QListWidget, QListWidgetItem
-from PyQt5 import QtGui, QtCore
+from PyQt5.QtWidgets import QApplication, QLabel, QPushButton, QWidget, QGridLayout, QLineEdit, QMessageBox, QListWidget, QListWidgetItem, QTextBrowser
+from PyQt5 import QtCore
 from PyQt5.QtGui import QCursor
 
 
@@ -57,8 +57,13 @@ def add_line_edit(text):
 # adds a list widget (qlistwidget) to our window
 def add_list_widget(color='white'):
     list_widget = QListWidget()
-    list_widget.setStyleSheet('border: none;' + f'background: {colors[color]};')
+    list_widget.setStyleSheet('border: none;' + f'background: {colors[color]}; font-size: 18px; color: {colors["dark_gray"]}; font-weight: 500;')
     return list_widget
+
+
+# adds a list widget item with some text
+def add_list_widget_item(text):
+    return QListWidgetItem(text)
 
 
 # adds an exit button (qpushbutton) to our main window with some text and styles
@@ -68,6 +73,13 @@ def add_exit_button(text):
     button.setStyleSheet('*{font-family: Roboto; font-weight: 500; font-size: 16px; padding: 5px 0px;'
     + f'color: {colors["dark_gray"]}; border: 0px solid {colors["white"]};' + '}' + '*:hover{' + f'background: {colors["purple"]}; color: {colors["white"]};' + '}')
     return button
+
+
+# adds a text browser for messages
+def add_text_browser():
+    text_browser = QTextBrowser()
+    text_browser.setStyleSheet(f'background: {colors["light_gray"]}; font-size: 18px; font-weight: 500; font-family: Roboto; color: {colors["dark_gray"]}; border: 0px solid {colors["light_gray"]};')
+    return text_browser
 
 
 # creates an error message (qmessagebox) with some text

@@ -2,6 +2,7 @@ import sys
 import json
 import pandas as pd
 import time
+from PyQt5 import QtGui
 from PyQt5.QtWidgets import QApplication, QWidget
 from PyQt5.QtNetwork import QTcpSocket, QHostAddress
 from ui import *
@@ -32,6 +33,8 @@ class Client(QWidget):
             'input': [],
             'list': []
         }
+
+        self.text_browsers = {}
 
         # some gui functions
         self.setWindowIcon(QtGui.QIcon('chat.png'))
@@ -72,9 +75,13 @@ class Client(QWidget):
         if data['status'] == 'add':
             self.online_users.append(data['username'])
             print('New user:', data['username'])
-        elif data['statue'] == 'remove':
+            self.add_online(data['username'])
+            self.text_browsers[data['username']] = add_text_browser()
+        elif data['status'] == 'remove':
             self.online_users.remove(data['username'])
             print('User disconnected:', data['username'])
+            self.remove_online()
+            self.text_browsers.pop(data['username'])
 
     # functions that gets a checked data
     def get_checked_data(self, data):
@@ -91,6 +98,10 @@ class Client(QWidget):
         print('All messages:\n', self.messages)
         self.online_users = data['users'][:]
         print('Online: ', self.online_users)
+        for i in self.online_users:
+            self.text_browsers[i] = add_text_browser()
+            self.fill_text_browser(i)
+        self.update_online()
 
     # functions that gets a message and adds it to database
     def get_message(self, data):
@@ -116,7 +127,40 @@ class Client(QWidget):
         user_data = {'command': 'check_data', 'status': 'sign up', 'username': self.user['username'], 'password': self.user['password']}
         self.send_message(user_data)
 
+    # function that says to server that user has disconnected
+    def log_out(self):
+        data = {'command': 'log_out', 'username': self.user['username']}
+        self.send_message(data)
+        self.user['username'] = ''
+        self.user['password'] = ''
+        self.login_frame()
+
     # FUNCTIONS THAT ARE RESPONSIBLE FOR GUI
+    # fill text widgets
+    def fill_text_browser(self, username):
+        for i, r in self.messages.iterrows():
+            if r['send'] == username or r['recv'] == username:
+                self.text_browsers[username].append(f'{r["send"]}: {r["message"]}')
+
+    # function that adds online users to a list widget
+    def update_online(self):
+        for i in self.online_users:
+            self.widgets['list'][0].addItem(add_list_widget_item(i))
+        self.widgets['list'][0].itemClicked.connect(self.handle_item_clicked)
+
+    # function that adds new user to a list widget
+    def add_online(self, username):
+        self.widgets['list'][0].addItem(add_list_widget_item(username))
+
+    # function that removes a user to a list widget
+    def remove_online(self):
+        self.widgets['list'][0].clear()
+        self.update_online()
+
+    def handle_item_clicked(self, item):
+        print(item.text(), 'selected')
+        self.main_second_frame(item.text())
+
     # deletes all widgets from our app (clears the window to prepare it for displaying new widgets)
     def clear_widgets(self):
         for widget in self.widgets:
@@ -191,9 +235,7 @@ class Client(QWidget):
     # creates a main frame which is used for messaging
     def main_first_frame(self):
         self.clear_widgets()
-        print('widgets cleared')
         self.setFixedSize(800, 600)
-        print('resize')
 
         self.widgets['label'].append(add_label(self.user['username'], boldness=600, align='c', tpad=5, bpad=5, size=18, background=colors['purple'], color=colors['white']))
         self.grid.addWidget(self.widgets['label'][-1], 0, 1)
@@ -213,8 +255,25 @@ class Client(QWidget):
         self.grid.addWidget(self.widgets['label'][-1], 0, 2, 4, 1)
 
         self.widgets['button'].append(add_exit_button('Log out'))
-        self.widgets['button'][-1].clicked.connect(self.login_frame)
+        self.widgets['button'][-1].clicked.connect(self.log_out)
         self.grid.addWidget(self.widgets['button'][-1], 3, 1)
 
         self.grid.setColumnMinimumWidth(2, 600)
-        print('col width')
+
+    def main_second_frame(self, username):
+        self.widgets['label'][-1].hide()
+        self.widgets['label'].pop(-1)
+
+        self.widgets['label'].append(add_label(username, boldness=600, align='l', tpad=5, bpad=5, size=18, background=colors['white'], color=colors['dark_gray']))
+        self.grid.addWidget(self.widgets['label'][-1], 0, 2, 1, 2)
+
+        self.grid.addWidget(self.text_browsers[username], 1, 2, 2, 2)
+
+        self.widgets['input'].append(add_line_edit('Enter your message...'))
+        self.grid.addWidget(self.widgets['input'][-1], 3, 2)
+
+        self.widgets['button'].append(add_exit_button('Send'))
+        # self.widgets['button'][-1].clicked.connect(self.log_out)
+        self.grid.addWidget(self.widgets['button'][-1], 3, 3)
+
+        self.grid.setColumnMinimumWidth(2, 500)
