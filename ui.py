@@ -61,6 +61,17 @@ def add_list_widget(color='white'):
     return list_widget
 
 
+# adds an input line (qlineedit) to our window with some placeholder and styles
+def add_text_edit(text):
+    line_edit = QLineEdit()
+    line_edit.setFrame(False)
+    line_edit.setPlaceholderText(text)
+    line_edit.setStyleSheet(
+        'font-family: Roboto; font-weight: 400; font-size: 16px; padding: 5px;'
+        + f'color: {colors["dark_gray"]}; border: 2px solid {colors["light_gray"]};')
+    return line_edit
+
+
 # adds a list widget item with some text
 def add_list_widget_item(text):
     return QListWidgetItem(text)

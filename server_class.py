@@ -137,9 +137,7 @@ class Server(QWidget):
         self.messages.to_csv('messages.csv')
         if recv in self.online_users:
             self.send_message(self.online_users[data['recv']], data)
-            self.widgets['text_browser'][1].append(f'From {send} to {recv}: {msg}')
-        else:
-            print('This user was disconnected.')
+        self.widgets['text_browser'][1].append(f'From {send} to {recv}: {msg}')
 
     # FUNCTIONS THAT CHECK DATA FROM CLIENT
     # a function that adds new user to online list and (maybe) database

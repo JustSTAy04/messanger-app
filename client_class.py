@@ -1,7 +1,6 @@
 import sys
 import json
 import pandas as pd
-import time
 from PyQt5 import QtGui
 from PyQt5.QtWidgets import QApplication, QWidget
 from PyQt5.QtNetwork import QTcpSocket, QHostAddress
@@ -25,6 +24,7 @@ class Client(QWidget):
 
         self.messages = pd.DataFrame({'send': [], 'recv': [], 'message': []})
         self.online_users = []
+        self.recv = ''
 
         # stores all widgets that are used in our app
         self.widgets = {
@@ -72,32 +72,28 @@ class Client(QWidget):
     # FUNCTIONS THAT ARE RESPONSIBLE FOR COMMANDS
     # functions that updates online users
     def update_users(self, data):
+        username = data['username']
         if data['status'] == 'add':
-            self.online_users.append(data['username'])
-            print('New user:', data['username'])
-            self.add_online(data['username'])
-            self.text_browsers[data['username']] = add_text_browser()
+            self.online_users.append(username)
+            self.add_online(username)
+            self.text_browsers[username] = add_text_browser()
+            self.fill_text_browser(username)
         elif data['status'] == 'remove':
-            self.online_users.remove(data['username'])
-            print('User disconnected:', data['username'])
+            self.online_users.remove(username)
             self.remove_online()
-            self.text_browsers.pop(data['username'])
+            self.text_browsers.pop(username)
 
     # functions that gets a checked data
     def get_checked_data(self, data):
         if data['result']:
-            print('data is checked, preparing main frame')
             self.main_first_frame()
         else:
             error_message(data['error'])
 
     # functions that gets databases
     def get_database(self, data):
-        print(data)
         self.messages = pd.DataFrame(data['msgs'])
-        print('All messages:\n', self.messages)
         self.online_users = data['users'][:]
-        print('Online: ', self.online_users)
         for i in self.online_users:
             self.text_browsers[i] = add_text_browser()
             self.fill_text_browser(i)
@@ -107,7 +103,7 @@ class Client(QWidget):
     def get_message(self, data):
         send, recv, msg = data['send'], data['recv'], data['message']
         self.messages.loc[len(self.messages)] = [send, recv, msg]
-        print(f'Message from {send}: {msg}.')
+        self.text_browsers[send].append(f'{send}: {msg}')
 
     # FUNCTIONS THAT ARE RESPONSIBLE FOR LOGGING IN AND SIGNING UP
     # gets user data that was entered
@@ -136,6 +132,15 @@ class Client(QWidget):
         self.login_frame()
 
     # FUNCTIONS THAT ARE RESPONSIBLE FOR GUI
+    # function that responsible for sending messages from gui
+    def send_button(self):
+        if self.widgets['input'][-1].text().strip() != '':
+            msg = self.widgets['input'][-1].text().strip()
+            self.text_browsers[self.recv].append(f'{self.user["username"]}: {msg}')
+            self.widgets['input'][-1].clear()
+            data = {'command': 'message', 'send': self.user['username'], 'recv': self.recv, 'message': msg}
+            self.send_message(data)
+
     # fill text widgets
     def fill_text_browser(self, username):
         for i, r in self.messages.iterrows():
@@ -158,7 +163,7 @@ class Client(QWidget):
         self.update_online()
 
     def handle_item_clicked(self, item):
-        print(item.text(), 'selected')
+        self.recv = item.text()
         self.main_second_frame(item.text())
 
     # deletes all widgets from our app (clears the window to prepare it for displaying new widgets)
@@ -175,6 +180,7 @@ class Client(QWidget):
         self.clear_widgets()
         self.setFixedSize(400, 300)
         self.grid.setColumnMinimumWidth(2, 0)
+        self.grid.setColumnMinimumWidth(3, 0)
 
         self.widgets['label'].append(add_label('Hello there!', boldness=500, size=18, align='c', tmar=17))
         self.grid.addWidget(self.widgets['label'][-1], 0, 1)
@@ -244,12 +250,6 @@ class Client(QWidget):
         self.grid.addWidget(self.widgets['label'][-1], 1, 1)
 
         self.widgets['list'].append(add_list_widget())
-        self.grid.addWidget(self.widgets['list'][-1], 2, 1)
-
-        #widgets['list'][-1].addItem(QListWidgetItem('Kate'))
-
-        # widgets['list'].append(add_list_widget('light_gray'))
-        # grid.addWidget(widgets['list'][-1], 0, 2, 4, 1)
 
         self.widgets['label'].append(add_label('Select a chat to start messaging', align='c', tpad=5, bpad=5, size=16, background=colors['purple'], color=colors['white']))
         self.grid.addWidget(self.widgets['label'][-1], 0, 2, 4, 1)
@@ -269,11 +269,12 @@ class Client(QWidget):
 
         self.grid.addWidget(self.text_browsers[username], 1, 2, 2, 2)
 
-        self.widgets['input'].append(add_line_edit('Enter your message...'))
+        self.widgets['input'].append(add_text_edit('Enter your message...'))
         self.grid.addWidget(self.widgets['input'][-1], 3, 2)
 
         self.widgets['button'].append(add_exit_button('Send'))
-        # self.widgets['button'][-1].clicked.connect(self.log_out)
+        self.widgets['button'][-1].clicked.connect(self.send_button)
         self.grid.addWidget(self.widgets['button'][-1], 3, 3)
 
         self.grid.setColumnMinimumWidth(2, 500)
+        self.grid.setColumnMinimumWidth(3, 100)
