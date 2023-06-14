@@ -250,6 +250,7 @@ class Client(QWidget):
         self.grid.addWidget(self.widgets['label'][-1], 1, 1)
 
         self.widgets['list'].append(add_list_widget())
+        self.grid.addWidget(self.widgets['list'][-1], 2, 1)
 
         self.widgets['label'].append(add_label('Select a chat to start messaging', align='c', tpad=5, bpad=5, size=16, background=colors['purple'], color=colors['white']))
         self.grid.addWidget(self.widgets['label'][-1], 0, 2, 4, 1)
@@ -264,10 +265,14 @@ class Client(QWidget):
         self.widgets['label'][-1].hide()
         self.widgets['label'].pop(-1)
 
+        for i in self.text_browsers.values():
+            i.hide()
+
         self.widgets['label'].append(add_label(username, boldness=600, align='l', tpad=5, bpad=5, size=18, background=colors['white'], color=colors['dark_gray']))
         self.grid.addWidget(self.widgets['label'][-1], 0, 2, 1, 2)
 
         self.grid.addWidget(self.text_browsers[username], 1, 2, 2, 2)
+        self.text_browsers[username].show()
 
         self.widgets['input'].append(add_text_edit('Enter your message...'))
         self.grid.addWidget(self.widgets['input'][-1], 3, 2)
