@@ -4,12 +4,18 @@ import pandas as pd
 from PyQt5 import QtGui
 from PyQt5.QtWidgets import QApplication, QWidget
 from PyQt5.QtNetwork import QTcpServer, QHostAddress
+from ui import *
 
 
 class Server(QWidget):
     # MAIN FUNCTIONS THAT RECEIVE AND SENDS MESSAGES, HANDLE CONNECTIONS AND CREATE ALL WE NEED
     def __init__(self):
         super().__init__()
+
+        self.widgets = {
+            'label': [],
+            'text_browser': []
+        }
 
         self.online_users = {}
         # get the users' info from the .csv file and creates a dataframe (our database)
@@ -23,9 +29,14 @@ class Server(QWidget):
         self.server.newConnection.connect(self.handle_connection)
 
         self.setWindowIcon(QtGui.QIcon('chat.png'))
-        self.setWindowTitle('Chatium server')
+        self.setWindowTitle('Server')
+        self.setFixedSize(600, 400)
+        self.setStyleSheet(f'background: {colors["white"]}')
+        self.grid = QGridLayout()
+        self.setLayout(self.grid)
+        self.main_frame()
 
-        print('Server is up and waiting for clients...')
+        self.widgets['text_browser'][1].append('Server is up and waiting for clients...')
 
     # handling connections (clients)
     def handle_connection(self):
@@ -41,7 +52,8 @@ class Server(QWidget):
             if s == client:
                 username = u
                 self.online_users.pop(username)
-                print(f'{username} disconnected.')
+                self.widgets['text_browser'][1].append(f'{username} disconnected.')
+                self.remove_online()
                 new_data = {'command': 'user_update', 'username': username, 'status': 'remove'}
                 for u2, s2 in self.online_users.items():
                     if u2 != username:
@@ -78,8 +90,9 @@ class Server(QWidget):
     # a function that removes user from online list
     def remove_user(self, data):
         username = data['username']
-        print(f'{username} disconnected.')
+        self.widgets['text_browser'][1].append(f'{username} disconnected.')
         self.online_users.pop(data['username'])
+        self.remove_online()
         new_data = {'command': 'user_update', 'username': username, 'status': 'remove'}
         for u, s in self.online_users.items():
             if u != username:
@@ -95,7 +108,7 @@ class Server(QWidget):
             if self.login_is_correct(username, password):
                 self.send_checked_data(client, new_data, result=True)
                 self.send_database(client, data)
-                print(f'{username} has connected.')
+                self.widgets['text_browser'][1].append(f'{username} has connected.')
                 self.new_user(client, data)
             else:
                 self.send_checked_data(client, new_data, error='Incorrect username or password!')
@@ -108,7 +121,7 @@ class Server(QWidget):
                         self.send_checked_data(client, new_data, result=True)
                         self.send_database(client, data)
                         self.add_user(username, password)
-                        print(f'{username} has connected.')
+                        self.widgets['text_browser'][1].append(f'{username} has connected.')
                         self.new_user(client, data)
                     else:
                         self.send_checked_data(client, new_data, error='This username is already taken.')
@@ -124,7 +137,7 @@ class Server(QWidget):
         self.messages.to_csv('messages.csv')
         if recv in self.online_users:
             self.send_message(self.online_users[data['recv']], data)
-            print(f'Message: {msg}, was sent from {send} to {recv}')
+            self.widgets['text_browser'][1].append(f'From {send} to {recv}: {msg}')
         else:
             print('This user was disconnected.')
 
@@ -132,7 +145,7 @@ class Server(QWidget):
     # a function that adds new user to online list and (maybe) database
     def new_user(self, client, data):
         self.online_users[data['username']] = client
-        print('Online:', self.online_users.keys())
+        self.add_online(data['username'])
         new_data = {'command': 'user_update', 'username': data['username'], 'status': 'add'}
         for u, s in self.online_users.items():
             if s != client:
@@ -197,3 +210,27 @@ class Server(QWidget):
                 res['recv'].append(r['recv'])
                 res['message'].append(r['message'])
         return res
+
+    # FUNCTIONS THAT ARE RESPONSIBLE FOR GUI
+    # function that adds new user to a text browser
+    def add_online(self, username):
+        self.widgets['text_browser'][0].append(username)
+
+    # function that removes a user to a list widget
+    def remove_online(self):
+        self.widgets['text_browser'][0].clear()
+        for i in self.online_users.keys():
+            self.widgets['text_browser'][0].append(i)
+
+    # function that creates a main frame
+    def main_frame(self):
+        self.widgets['label'].append(add_label('Online users:', boldness=600, align='c', tpad=5, size=18))
+        self.grid.addWidget(self.widgets['label'][-1], 0, 1)
+
+        self.widgets['text_browser'].append(add_text_browser())
+        self.grid.addWidget(self.widgets['text_browser'][-1], 1, 1)
+
+        self.widgets['text_browser'].append(add_text_browser())
+        self.grid.addWidget(self.widgets['text_browser'][-1], 0, 2, 2, 1)
+
+        self.grid.setColumnMinimumWidth(2, 400)
